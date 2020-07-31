@@ -82,6 +82,19 @@ class BiditemsTable extends Table
             ->dateTime('endtime')
             ->requirePresence('endtime', 'create')
             ->notEmptyDateTime('endtime');
+        
+        $validator
+            ->scalar('detail')
+            ->maxLength('detail', 400)
+            ->requirePresence('detail', 'create')
+            ->notEmptyString('detail');
+
+        $validator
+            ->requirePresence('image_path', 'create')
+            ->notEmptyFile('image_path')
+            ->add('image_path', 'file', [
+                'rule' => ['mimeType', ['image/jpeg', 'image/png', 'image/gif']]]
+            );
 
         return $validator;
     }
@@ -98,5 +111,16 @@ class BiditemsTable extends Table
         $rules->add($rules->existsIn(['user_id'], 'Users'));
 
         return $rules;
+    }
+
+
+    /**
+     * biditem_idの最新数字を取得する
+    */
+    public function findLastId(Query $query) {
+        $lastId = $query->select('id')->order(['id' => 'desc'])->first();
+        $lastId = json_decode($lastId, true);
+        $biditem_id = $lastId['id'] + 1;
+        return $biditem_id;
     }
 }
