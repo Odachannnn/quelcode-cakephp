@@ -102,7 +102,7 @@ class AuctionController extends AuctionBaseController
 			// ファイルの拡張子を取得する
 			$image_path = pathinfo($image_path, PATHINFO_EXTENSION);
 			// ファイル名につけるidを取得し、$iteminfo['image_path']に代入する
-			$biditem_id = $this->Biditems->find('lastId');
+			$biditem_id = $this->Biditems->find('lastId'); //findLastIdメソッド：BiditemsTable.phpに記載、最新のID取得
 			$iteminfo['image_path'] = $biditem_id . '.' . $image_path;
 			// ファイルを移動させる
 			move_uploaded_file($tmp_file, '../webroot/img/auction/' . $iteminfo['image_path']);
