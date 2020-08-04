@@ -8,6 +8,7 @@
 		echo '<p><strong>USER: ' . $authuser['username'] . '</strong></p>';
 		echo $this->Form->control('name');
 		echo $this->Form->control('detail', ['type' => 'textarea', 'label' => '詳細情報']);
+		echo $this->Form->error('image_path');
 		echo $this->Form->file('image_path', [
 			'accept' => 'image/jpeg, image/png, image/gif',
 			'label' => '商品画像 ※ 拡張子は「jpeg」「png」「gif」のみ。（大文字可）'
