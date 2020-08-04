@@ -111,6 +111,16 @@ class BiditemsTable extends Table
     {
         $rules->add($rules->existsIn(['user_id'], 'Users'));
 
+        // save()時のimage_pathについてルールチェック追加
+        //文字列であるか、その文字列は400文字以内であるか
+        $rules->addCreate(function($entity) {
+            if (is_string($entity->image_path) && strlen($entity->image_path) <= 400) {
+                return true;
+            } else {
+                return false;
+            }
+        }, ['message'=> '保存できませんでした。']);
+
         return $rules;
     }
 
