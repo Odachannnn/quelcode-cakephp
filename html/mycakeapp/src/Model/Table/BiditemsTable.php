@@ -92,8 +92,9 @@ class BiditemsTable extends Table
         $validator
             ->requirePresence('image_path', 'create')
             ->notEmptyFile('image_path')
-            ->add('image_path', 'file', [
-                'rule' => ['mimeType', ['image/jpeg', 'image/png', 'image/gif']]]
+            ->add('image_path','type', [
+                'rule' => ['mimeType', ['image/jpeg', 'image/png', 'image/gif']],
+                'message' => 'ファイル形式は「.jpeg」「.png」「.gif」のいずれかをお選びください。']
             );
 
         return $validator;
