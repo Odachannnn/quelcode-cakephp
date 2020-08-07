@@ -10,7 +10,7 @@ use Cake\Validation\Validator;
  * Sendinfo Model
  *
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
- * @property \App\Model\Table\BidinfosTable&\Cake\ORM\Association\BelongsTo $Bidinfos
+ * @property \App\Model\Table\BidinfoTable&\Cake\ORM\Association\BelongsTo $Bidinfo
  *
  * @method \App\Model\Entity\Sendinfo get($primaryKey, $options = [])
  * @method \App\Model\Entity\Sendinfo newEntity($data = null, array $options = [])
@@ -45,7 +45,7 @@ class SendinfoTable extends Table
             'foreignKey' => 'user_id',
             'joinType' => 'INNER',
         ]);
-        $this->belongsTo('Bidinfos', [
+        $this->belongsTo('Bidinfo', [
             'foreignKey' => 'bidinfo_id',
             'joinType' => 'INNER',
         ]);
@@ -94,7 +94,7 @@ class SendinfoTable extends Table
     public function buildRules(RulesChecker $rules)
     {
         $rules->add($rules->existsIn(['user_id'], 'Users'));
-        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfos'));
+        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfo'));
 
         return $rules;
     }

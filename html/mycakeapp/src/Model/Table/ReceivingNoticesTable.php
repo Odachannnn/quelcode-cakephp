@@ -9,7 +9,7 @@ use Cake\Validation\Validator;
 /**
  * ReceivingNotices Model
  *
- * @property \App\Model\Table\BidinfosTable&\Cake\ORM\Association\BelongsTo $Bidinfos
+ * @property \App\Model\Table\BidinfoTable&\Cake\ORM\Association\BelongsTo $Bidinfo
  *
  * @method \App\Model\Entity\ReceivingNotice get($primaryKey, $options = [])
  * @method \App\Model\Entity\ReceivingNotice newEntity($data = null, array $options = [])
@@ -40,7 +40,7 @@ class ReceivingNoticesTable extends Table
 
         $this->addBehavior('Timestamp');
 
-        $this->belongsTo('Bidinfos', [
+        $this->belongsTo('Bidinfo', [
             'foreignKey' => 'bidinfo_id',
             'joinType' => 'INNER',
         ]);
@@ -70,7 +70,7 @@ class ReceivingNoticesTable extends Table
      */
     public function buildRules(RulesChecker $rules)
     {
-        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfos'));
+        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfo'));
 
         return $rules;
     }

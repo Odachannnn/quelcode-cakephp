@@ -53,6 +53,18 @@ class BidinfoTable extends Table
         $this->hasMany('Bidmessages', [
             'foreignKey' => 'bidinfo_id',
         ]);
+        $this->hasMany('Talks', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
+        $this->hasOne('ShippingNotices', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
+        $this->hasOne('ReceivingNotices', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
+        $this->hasMany('Sendinfo', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
     }
 
     /**
