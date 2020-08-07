@@ -20,7 +20,7 @@ class RatinginfoController extends AppController
     public function index()
     {
         $this->paginate = [
-            'contain' => ['Bidinfos', 'Users'],
+            'contain' => ['Bidinfo', 'Users'],
         ];
         $ratinginfo = $this->paginate($this->Ratinginfo);
 
@@ -37,7 +37,7 @@ class RatinginfoController extends AppController
     public function view($id = null)
     {
         $ratinginfo = $this->Ratinginfo->get($id, [
-            'contain' => ['Bidinfos', 'Users'],
+            'contain' => ['Bidinfo', 'Users'],
         ]);
 
         $this->set('ratinginfo', $ratinginfo);
@@ -60,9 +60,9 @@ class RatinginfoController extends AppController
             }
             $this->Flash->error(__('The ratinginfo could not be saved. Please, try again.'));
         }
-        $bidinfos = $this->Ratinginfo->Bidinfos->find('list', ['limit' => 200]);
+        $bidinfo = $this->Ratinginfo->Bidinfo->find('list', ['limit' => 200]);
         $users = $this->Ratinginfo->Users->find('list', ['limit' => 200]);
-        $this->set(compact('ratinginfo', 'bidinfos', 'users'));
+        $this->set(compact('ratinginfo', 'bidinfo', 'users'));
     }
 
     /**
@@ -86,9 +86,9 @@ class RatinginfoController extends AppController
             }
             $this->Flash->error(__('The ratinginfo could not be saved. Please, try again.'));
         }
-        $bidinfos = $this->Ratinginfo->Bidinfos->find('list', ['limit' => 200]);
+        $bidinfo = $this->Ratinginfo->Bidinfo->find('list', ['limit' => 200]);
         $users = $this->Ratinginfo->Users->find('list', ['limit' => 200]);
-        $this->set(compact('ratinginfo', 'bidinfos', 'users'));
+        $this->set(compact('ratinginfo', 'bidinfo', 'users'));
     }
 
     /**
