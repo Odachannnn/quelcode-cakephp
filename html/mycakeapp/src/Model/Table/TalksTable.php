@@ -1,10 +1,12 @@
 <?php
+
 namespace App\Model\Table;
 
 use Cake\ORM\Query;
 use Cake\ORM\RulesChecker;
 use Cake\ORM\Table;
 use Cake\Validation\Validator;
+use Cake\Log\Log;
 
 /**
  * Talks Model
@@ -85,5 +87,37 @@ class TalksTable extends Table
         $rules->add($rules->existsIn(['user_id'], 'Users'));
 
         return $rules;
+    }
+
+    /**
+     * 各落札商品の取引メッセージを取得するメソッドを作成
+     */
+    public function findTalks(Query $query, array $options)
+    {
+        $bidinfo_id = $options['bidinfo_id'];
+        return $query->where(['Talks.bidinfo_id' => $bidinfo_id])->contain(['Bidinfo', 'Users'])->orderDesc('Talks.created');
+    }
+
+    /**
+     * 発送連絡後に自動で取引メッセージを保存するメソッドを作成
+     */
+    // case 1 発送連絡
+    public function saveSendMsg(array $options) {
+        $data = [
+            'bidinfo_id' => $options['bidinfo_id'],
+            'user_id' => $options['user_id'],
+            'message' => '商品が発送されました。'
+        ];
+        return $this->save($this->newEntity($data));
+    }
+
+    // case 2 受取連絡
+    public function saveReceiveMsg(array $options) {
+        $data = [
+            'bidinfo_id' => $options['bidinfo_id'],
+            'user_id' => $options['user_id'],
+            'message' => '商品が到着しました。',
+        ];
+        return $this->save($this->newEntity($data));
     }
 }
