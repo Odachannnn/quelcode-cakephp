@@ -72,7 +72,7 @@ class RatinginfoTable extends Table
             ->scalar('rating_msg')
             ->maxLength('rating_msg', 400)
             ->requirePresence('rating_msg', 'create')
-            ->notEmptyString('rating_msg');
+            ->allowEmptyString('rating_msg');
 
         return $validator;
     }
