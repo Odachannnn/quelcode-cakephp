@@ -82,6 +82,20 @@ class BiditemsTable extends Table
             ->dateTime('endtime')
             ->requirePresence('endtime', 'create')
             ->notEmptyDateTime('endtime');
+        
+        $validator
+            ->scalar('detail')
+            ->maxLength('detail', 400)
+            ->requirePresence('detail', 'create')
+            ->notEmptyString('detail');
+
+        $validator
+            ->requirePresence('image_path', 'create')
+            ->notEmptyFile('image_path')
+            ->add('image_path','type', [
+                'rule' => ['mimeType', ['image/jpeg', 'image/png', 'image/gif']],
+                'message' => 'ファイル形式は「.jpeg」「.png」「.gif」のいずれかをお選びください。']
+            );
 
         return $validator;
     }
@@ -97,6 +111,27 @@ class BiditemsTable extends Table
     {
         $rules->add($rules->existsIn(['user_id'], 'Users'));
 
+        // save()時のimage_pathについてルールチェック追加
+        //文字列であるか、その文字列は400文字以内であるか
+        $rules->addCreate(function($entity) {
+            if (is_string($entity->image_path) && strlen($entity->image_path) <= 400) {
+                return true;
+            } else {
+                return false;
+            }
+        }, ['message'=> '保存できませんでした。']);
+
         return $rules;
+    }
+
+
+    /**
+     * biditem_idの最新数字を取得する
+    */
+    public function findLastId(Query $query) {
+        $lastId = $query->select('id')->order(['id' => 'desc'])->first();
+        $lastId = json_decode($lastId, true);
+        $biditem_id = $lastId['id'] + 1;
+        return $biditem_id;
     }
 }
