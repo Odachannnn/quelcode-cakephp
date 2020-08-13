@@ -91,4 +91,21 @@ class RatinginfoTable extends Table
 
         return $rules;
     }
+
+    /**
+     * あるユーザー評価を取得し、平均を割り出すメソッド
+     */
+    public function getRatingAvg(string $user_id) {
+        $query = $this->find()->contain('Users');
+        $avg = $query->select(['avg' => $query->func()->avg('Ratinginfo.rating_score'), 'Users.username'])->where(['user_id' => $user_id])->group('Users.id')->first();
+        return $avg;
+    }
+    /**
+     * 全てのユーザーの評価を取得し、それぞれ平均を割り出すメソッド
+     */
+    public function getAllAvg() {
+        $query = $this->find()->contain('Users');
+        $allAvg = $query->select(['avg' => $query->func()->avg('Ratinginfo.rating_score'), 'Users.username', 'Users.id'])->group('Users.id');
+        return $allAvg;
+    }
 }
