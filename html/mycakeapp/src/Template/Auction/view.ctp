@@ -5,6 +5,10 @@
 	<td><?= $biditem->has('user') ? $biditem->user->username : '' ?></td>
 </tr>
 <tr>
+<th class="small" scope="row">出品者評価</th>
+<td><?= round($ratingAvg->avg, 2) ?></td>
+</tr>
+<tr>
 	<th scope="row">商品名</th>
 	<td><?= h($biditem->name) ?></td>
 </tr>
