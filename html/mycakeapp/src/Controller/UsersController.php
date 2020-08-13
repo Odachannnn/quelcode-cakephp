@@ -66,7 +66,7 @@ class UsersController extends AppController
     public function logout()
     {
         // セッションを破棄
-        $this->request->session()->destroy();
+        $this->request->destroy();
         return $this->redirect($this->Auth->logout());
     }
 
@@ -78,7 +78,7 @@ class UsersController extends AppController
     }
 
     // 認証時のロールのチェック
-    public function isAuthorized($user = null)
+    public function isAuthorized($user)
     {
         // 管理者はtrue
         if ($user['role'] === 'admin') {
