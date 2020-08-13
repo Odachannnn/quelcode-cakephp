@@ -10,8 +10,21 @@ use App\Controller\AppController;
  *
  * @method \App\Model\Entity\Ratinginfo[]|\Cake\Datasource\ResultSetInterface paginate($object = null, array $settings = [])
  */
-class RatinginfoController extends AppController
+class RatinginfoController extends AuctionBaseController
 {
+    /**
+     * 初期化処理
+     */
+    public function initialize()
+    {
+        parent::initialize();
+        $this->loadModel('Users');
+        $this->loadModel('Bidinfo');
+        $this->loadModel('Biditems');
+        $this->set('authuser', $this->Auth->user());
+        $this->viewBuilder()->setLayout('ratinginfo');
+    }
+
     /**
      * Index method
      *
@@ -22,7 +35,7 @@ class RatinginfoController extends AppController
         $this->paginate = [
             'contain' => ['Bidinfo', 'Users'],
         ];
-        $ratinginfo = $this->paginate($this->Ratinginfo);
+        $ratinginfo = $this->paginate($this->Ratinginfo->getAllAvg());
 
         $this->set(compact('ratinginfo'));
     }
@@ -36,78 +49,10 @@ class RatinginfoController extends AppController
      */
     public function view($id = null)
     {
-        $ratinginfo = $this->Ratinginfo->get($id, [
-            'contain' => ['Bidinfo', 'Users'],
-        ]);
-
-        $this->set('ratinginfo', $ratinginfo);
-    }
-
-    /**
-     * Add method
-     *
-     * @return \Cake\Http\Response|null Redirects on successful add, renders view otherwise.
-     */
-    public function add()
-    {
-        $ratinginfo = $this->Ratinginfo->newEntity();
-        if ($this->request->is('post')) {
-            $ratinginfo = $this->Ratinginfo->patchEntity($ratinginfo, $this->request->getData());
-            if ($this->Ratinginfo->save($ratinginfo)) {
-                $this->Flash->success(__('The ratinginfo has been saved.'));
-
-                return $this->redirect(['action' => 'index']);
-            }
-            $this->Flash->error(__('The ratinginfo could not be saved. Please, try again.'));
-        }
-        $bidinfo = $this->Ratinginfo->Bidinfo->find('list', ['limit' => 200]);
-        $users = $this->Ratinginfo->Users->find('list', ['limit' => 200]);
-        $this->set(compact('ratinginfo', 'bidinfo', 'users'));
-    }
-
-    /**
-     * Edit method
-     *
-     * @param string|null $id Ratinginfo id.
-     * @return \Cake\Http\Response|null Redirects on successful edit, renders view otherwise.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
-    public function edit($id = null)
-    {
-        $ratinginfo = $this->Ratinginfo->get($id, [
-            'contain' => [],
-        ]);
-        if ($this->request->is(['patch', 'post', 'put'])) {
-            $ratinginfo = $this->Ratinginfo->patchEntity($ratinginfo, $this->request->getData());
-            if ($this->Ratinginfo->save($ratinginfo)) {
-                $this->Flash->success(__('The ratinginfo has been saved.'));
-
-                return $this->redirect(['action' => 'index']);
-            }
-            $this->Flash->error(__('The ratinginfo could not be saved. Please, try again.'));
-        }
-        $bidinfo = $this->Ratinginfo->Bidinfo->find('list', ['limit' => 200]);
-        $users = $this->Ratinginfo->Users->find('list', ['limit' => 200]);
-        $this->set(compact('ratinginfo', 'bidinfo', 'users'));
-    }
-
-    /**
-     * Delete method
-     *
-     * @param string|null $id Ratinginfo id.
-     * @return \Cake\Http\Response|null Redirects to index.
-     * @throws \Cake\Datasource\Exception\RecordNotFoundException When record not found.
-     */
-    public function delete($id = null)
-    {
-        $this->request->allowMethod(['post', 'delete']);
-        $ratinginfo = $this->Ratinginfo->get($id);
-        if ($this->Ratinginfo->delete($ratinginfo)) {
-            $this->Flash->success(__('The ratinginfo has been deleted.'));
-        } else {
-            $this->Flash->error(__('The ratinginfo could not be deleted. Please, try again.'));
-        }
-
-        return $this->redirect(['action' => 'index']);
+        // $user_id === $id の評価平均を得る
+        $ratingAvg = $this->Ratinginfo->getRatingAvg($id);
+        // $user_id === $id の評価データを全て得る
+        $allRate = $this->Ratinginfo->findByUser_id($id)->contain(['Users']);
+        $this->set(compact('allRate', 'ratingAvg'));
     }
 }
