@@ -36,24 +36,6 @@ class AuctionController extends AuctionBaseController
 		$this->viewBuilder()->setLayout('auction');
 	}
 
-	// 取引画面のアクセスを出品者と落札者のみに限定
-	public function isAuthorized($user)
-	{
-		if ($user['role'] == 'user') {
-			$action = $this->request->getParam('action');
-			if (in_array($action, ['talkTerms'])) {
-				$id = $this->request->getParam('pass.0');
-				$Bidder = $this->Bidinfo->findById($id)->first();
-				$sellor = $this->Biditems->findById($Bidder->biditem_id)->first();
-				if ($user['id'] === $Bidder->user_id || $user['id'] === $sellor->user_id) {
-					return true;
-				} else {
-					return $this->redirect(['action' => 'index']);
-				}
-			}
-		}
-		return parent::isAuthorized($user);
-	}
 
 	// トップページ
 	public function index()
@@ -220,6 +202,17 @@ class AuctionController extends AuctionBaseController
 	// 取引画面の表示
 	public function talkTerms($bidinfo_id = null)
 	{
+		// 渡されたbidinfo_idの落札情報があるか確認（メソッドはテーブルクラスに記述）
+		if (!$this->Bidinfo->isExists($bidinfo_id)) {
+			return $this->redirect(['action' => 'index']);
+		}
+		$Bidder = $this->Bidinfo->findById($bidinfo_id)->first();
+		$sellor = $this->Biditems->findById($Bidder->biditem_id)->first();
+		$user = $this->Auth->user();
+		if ($user['id'] !== $Bidder->user_id || $user['id'] !== $sellor->user_id) {
+			return $this->redirect(['action' => 'index']);
+		}
+
 		// 落札情報の取得
 		$bidData = $this->Bidinfo->get($bidinfo_id, ['contain' => ['Biditems']]);
 		// 新しい取引メッセージエンティティを作成

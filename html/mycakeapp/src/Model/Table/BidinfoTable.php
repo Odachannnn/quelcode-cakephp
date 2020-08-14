@@ -101,4 +101,14 @@ class BidinfoTable extends Table
 
         return $rules;
     }
+    /**
+     * パスで指定された$bidinfo_idのレコードがあるか判別する
+     */
+    public function isExists(string $id) {
+        if ($this->findById($id)->toList()) {
+            return true;
+        } else {
+            return false;
+        }
+    }
 }
