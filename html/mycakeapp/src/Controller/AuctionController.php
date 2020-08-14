@@ -202,14 +202,14 @@ class AuctionController extends AuctionBaseController
 	// 取引画面の表示
 	public function talkTerms($bidinfo_id = null)
 	{
-		// 渡されたbidinfo_idの落札情報があるか確認（メソッドはテーブルクラスに記述）
+		// 渡されたbidinfo_idの落札情報がなければリダイレクト（メソッドはテーブルクラスに記述）
 		if (!$this->Bidinfo->isExists($bidinfo_id)) {
 			return $this->redirect(['action' => 'index']);
 		}
-		$Bidder = $this->Bidinfo->findById($bidinfo_id)->first();
-		$sellor = $this->Biditems->findById($Bidder->biditem_id)->first();
+		$bidder = $this->Bidinfo->findById($bidinfo_id)->first();
+		$sellor = $this->Biditems->findById($bidder->biditem_id)->first();
 		$user = $this->Auth->user();
-		if ($user['id'] !== $Bidder->user_id || $user['id'] !== $sellor->user_id) {
+		if ($user['id'] !== $bidder->user_id && $user['id'] !== $sellor->user_id) {
 			return $this->redirect(['action' => 'index']);
 		}
 
@@ -239,7 +239,7 @@ class AuctionController extends AuctionBaseController
 		// case 4 取引評価
 		$is_rating_sent = $this->Ratinginfo->findByBidinfo_id($bidinfo_id)->toArray();
 
-		$this->set(compact('bidData', 'talks', 'talk', 'bidinfo_id', 'sendinfo', 'is_sendinfo_sent', 'is_shipping_notice_sent', 'is_receiving_notice_sent', 'shippingNotice', 'receivingNotice', 'ratinginfo', 'is_rating_sent'));
+		$this->set(compact('bidder','bidData', 'talks', 'talk', 'bidinfo_id', 'sendinfo', 'is_sendinfo_sent', 'is_shipping_notice_sent', 'is_receiving_notice_sent', 'shippingNotice', 'receivingNotice', 'ratinginfo', 'is_rating_sent'));
 
 
 		//HTTP:POSTメソッドでアクセスされたとき
