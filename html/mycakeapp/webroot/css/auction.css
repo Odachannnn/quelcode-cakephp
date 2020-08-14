@@ -25,15 +25,6 @@ table tr th.small {
 nav.sidebar {
 	background:#f6f6ff;
 }
-summary {
-	display: inline-block;
-	padding: 1rem 2rem 1.0625rem 2rem;
-	font-size: 1rem;
-	margin: 0 0 1.25rem;
-	background-color: #008CBA;
-	border-color: #007095;
-	color: #f6f6ff;
-}
 .rating {
 	display: inline;
 	padding: 0 8px;
