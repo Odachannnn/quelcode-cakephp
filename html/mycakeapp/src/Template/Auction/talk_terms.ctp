@@ -67,11 +67,11 @@ if (!empty($is_receiving_notice_sent) && count($is_rating_sent) === 0 || count($
             echo $this->Form->hidden('Ratinginfo.user_id', ['value' => $bidData->user_id]);
         }
         echo $this->Form->radio('Ratinginfo.rating_score', [
-            ['text' => 'よし', 'value' => 5],
-            ['text' => 'よろし', 'value' => 4],
-            ['text' => 'ふつう', 'value' => 3, 'checked' => true],
-            ['text' => 'わろし', 'value' => 2],
-            ['text' => 'わし', 'value' => 1]
+            ['text' => 'よし（５）', 'value' => 5],
+            ['text' => 'よろし（４）', 'value' => 4],
+            ['text' => 'ふつう（３）', 'value' => 3, 'checked' => true],
+            ['text' => 'わろし（２）', 'value' => 2],
+            ['text' => 'あし（１）', 'value' => 1]
         ], ['label' => ['class' => 'rating']]);
         echo $this->Form->control('Ratinginfo.rating_msg', ['type' => 'textarea', 'label' => '評価コメントを記入する（＊空欄可）']);
         echo $this->Form->button(__('取引相手を評価する'));
