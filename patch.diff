@@ -1,0 +1,574 @@
+From e000fd553ca2c002f2fb34db2e9b26ba31272a8f Mon Sep 17 00:00:00 2001
+From: Odachannnn <63225126+Odachannnn@users.noreply.github.com>
+Date: Thu, 13 Aug 2020 17:20:42 +0900
+Subject: [PATCH] =?UTF-8?q?Revert=20"CakePHP=E8=AA=B2=E9=A1=8C=EF=BC=91"?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ .../20200728065703_AddColumnsToBiditems.php   |  28 ----
+ .../Migrations/schema-dump-default.lock       | Bin 7691 -> 7229 bytes
+ .../src/Controller/AuctionController.php      | 106 ++++---------
+ html/mycakeapp/src/Model/Entity/Biditem.php   |   2 -
+ .../src/Model/Table/BiditemsTable.php         |  35 -----
+ html/mycakeapp/src/Template/Auction/add.ctp   |  10 +-
+ html/mycakeapp/src/Template/Auction/home2.ctp |   2 +-
+ html/mycakeapp/src/Template/Auction/view.ctp  | 145 ++++++++----------
+ html/mycakeapp/webroot/css/auction.css        |   4 -
+ html/mycakeapp/webroot/img/auction/.gitkeep   |   0
+ html/mycakeapp/webroot/js/countDown.js        |  19 ---
+ 11 files changed, 99 insertions(+), 252 deletions(-)
+ delete mode 100644 html/mycakeapp/config/Migrations/20200728065703_AddColumnsToBiditems.php
+ delete mode 100644 html/mycakeapp/webroot/img/auction/.gitkeep
+ delete mode 100644 html/mycakeapp/webroot/js/countDown.js
+
+diff --git a/html/mycakeapp/config/Migrations/20200728065703_AddColumnsToBiditems.php b/html/mycakeapp/config/Migrations/20200728065703_AddColumnsToBiditems.php
+deleted file mode 100644
+index bf8df5c..0000000
+--- a/html/mycakeapp/config/Migrations/20200728065703_AddColumnsToBiditems.php
++++ /dev/null
+@@ -1,28 +0,0 @@
+-<?php
+-use Migrations\AbstractMigration;
+-
+-class AddColumnsToBiditems extends AbstractMigration
+-{
+-    /**
+-     * Change Method.
+-     *
+-     * More information on this method is available here:
+-     * https://book.cakephp.org/phinx/0/en/migrations.html#the-change-method
+-     * @return void
+-     */
+-    public function change()
+-    {
+-        $table = $this->table('biditems');
+-        $table->addColumn('detail', 'string', [
+-            'default' => null,
+-            'limit' => 400,
+-            'null' => false,
+-        ]);
+-        $table->addColumn('image_path', 'string', [
+-            'default' => null,
+-            'limit' => 100,
+-            'null' => false,
+-        ]);
+-        $table->update();
+-    }
+-}
+diff --git a/html/mycakeapp/config/Migrations/schema-dump-default.lock b/html/mycakeapp/config/Migrations/schema-dump-default.lock
+index 1cc7478fec81d4409ebe402e9997dda78eebbe1d..e63df27ec9c1756a6e4a058efe1cc7e816e11cf2 100644
+GIT binary patch
+delta 38
+tcmeCS*=w;uf{oE^vI5_}&DYs%nJ52d76Wn*a4*?BkA;tM^J?A%0RRS+4KM%z
+
+delta 143
+zcmdmM(QUIqf{oE)@@(;ao3FFkGIJMOnOP~Nq?ROR=1hLbCNg<FyA+d&!DK~tjmdi?
+z()kPxtdufy6Vp@U3ld8*pej~Q-XJ9gG~^Ax^kiQanaN39xmrl(C|QF!#U(|VdFdby
+Rsv(;drKK4+-{wvd004f5FLD3?
+
+diff --git a/html/mycakeapp/src/Controller/AuctionController.php b/html/mycakeapp/src/Controller/AuctionController.php
+index 19801f0..cc20f4a 100644
+--- a/html/mycakeapp/src/Controller/AuctionController.php
++++ b/html/mycakeapp/src/Controller/AuctionController.php
+@@ -1,5 +1,4 @@
+ <?php
+-
+ namespace App\Controller;
+ 
+ use App\Controller\AppController;
+@@ -34,9 +33,8 @@ class AuctionController extends AuctionBaseController
+ 	{
+ 		// ページネーションでBiditemsを取得
+ 		$auction = $this->paginate('Biditems', [
+-			'order' => ['endtime' => 'desc'],
+-			'limit' => 10
+-		]);
++			'order' =>['endtime'=>'desc'], 
++			'limit' => 10]);
+ 		$this->set(compact('auction'));
+ 	}
+ 
+@@ -58,12 +56,11 @@ class AuctionController extends AuctionBaseController
+ 			$bidinfo->biditem_id = $id;
+ 			// 最高金額のBidrequestを検索
+ 			$bidrequest = $this->Bidrequests->find('all', [
+-				'conditions' => ['biditem_id' => $id],
++				'conditions'=>['biditem_id'=>$id], 
+ 				'contain' => ['Users'],
+-				'order' => ['price' => 'desc']
+-			])->first();
++				'order'=>['price'=>'desc']])->first();
+ 			// Bidrequestが得られた時の処理
+-			if (!empty($bidrequest)) {
++			if (!empty($bidrequest)){
+ 				// Bidinfoの各種プロパティを設定して保存する
+ 				$bidinfo->user_id = $bidrequest->user->id;
+ 				$bidinfo->user = $bidrequest->user;
+@@ -71,67 +68,35 @@ class AuctionController extends AuctionBaseController
+ 				$this->Bidinfo->save($bidinfo);
+ 			}
+ 			// Biditemのbidinfoに$bidinfoを設定
+-			$biditem->bidinfo = $bidinfo;
++			$biditem->bidinfo = $bidinfo;		
+ 		}
+-		// 終了予定時刻=>$biditem['endtime'] と 現在時刻の差分をjsに渡す
+-		// 終了予定時刻と現在時刻のタイムスタンプを取得する
+-		$endtime = strtotime($biditem['endtime']);
+-		$now = time();
+-		$timediff = $endtime - $now;
+-
+ 		// Bidrequestsからbiditem_idが$idのものを取得
+ 		$bidrequests = $this->Bidrequests->find('all', [
+-			'conditions' => ['biditem_id' => $id],
++			'conditions'=>['biditem_id'=>$id], 
+ 			'contain' => ['Users'],
+-			'order' => ['price' => 'desc']
+-		])->toArray();
++			'order'=>['price'=>'desc']])->toArray();
+ 		// オブジェクト類をテンプレート用に設定
+-		$this->set(compact('biditem', 'bidrequests', 'timediff'));
++		$this->set(compact('biditem', 'bidrequests'));
+ 	}
+ 
+ 	// 出品する処理
+ 	public function add()
+ 	{
++		// Biditemインスタンスを用意
++		$biditem = $this->Biditems->newEntity();
+ 		// POST送信時の処理
+ 		if ($this->request->is('post')) {
+-			// postされたデータを取得する
+-			$iteminfo = $this->request->getData();
+-			// newEntityを作成する。ここで送信されてきたデータを検証
+-			$biditem = $this->Biditems->newEntity($iteminfo);
+-			// バリデーションエラーがあった場合
+-			if (!empty($biditem->getErrors())) {
+-				$this->Flash->error(__('保存に失敗しました。エラーを確認してください'));
++			// $biditemにフォームの送信内容を反映
++			$biditem = $this->Biditems->patchEntity($biditem, $this->request->getData());
++			// $biditemを保存する
++			if ($this->Biditems->save($biditem)) {
++				// 成功時のメッセージ
++				$this->Flash->success(__('保存しました。'));
++				// トップページ（index）に移動
++				return $this->redirect(['action' => 'index']);
+ 			}
+-			// バリデーションエラーがなかった場合
+-			if (empty($biditem->getErrors())) {
+-				// 以下画像データのファイル名の変更、ファイルの移動について
+-				// 元々のファイル名を取得する。
+-				$image_path = $iteminfo['image_path']['name'];
+-				// 一時保存されているフォルダでのファイル名を取得する。
+-				$tmp_file = $iteminfo['image_path']['tmp_name'];
+-				// ファイルの拡張子を取得する
+-				$image_path = pathinfo($image_path, PATHINFO_EXTENSION);
+-				// ファイル名につけるidを取得し、$iteminfo['image_path']に代入する
+-				$biditem_id = $this->Biditems->find('lastId'); //findLastIdメソッド：BiditemsTable.phpに記載、最新のID取得
+-				$iteminfo['image_path'] = $biditem_id . '.' . $image_path;
+-				$biditem = $this->Biditems->patchEntity($biditem, $iteminfo, [
+-					'validate' => false
+-				]);
+-				// $biditemを保存する
+-				if ($this->Biditems->save($biditem)) {
+-					// ファイルを移動させる
+-					move_uploaded_file($tmp_file, '../webroot/img/auction/' . $iteminfo['image_path']);
+-					// 成功時のメッセージ
+-					$this->Flash->success(__('保存しました。'));
+-					// トップページ（index）に移動
+-					return $this->redirect(['action' => 'index']);
+-				}
+-				// 失敗時のメッセージ
+-				$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
+-			} 
+-		} else {
+-			// Biditemインスタンスを用意
+-			$biditem = $this->Biditems->newEntity();
++			// 失敗時のメッセージ
++			$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
+ 		}
+ 		// 値を保管
+ 		$this->set(compact('biditem'));
+@@ -154,7 +119,7 @@ class AuctionController extends AuctionBaseController
+ 				// 成功時のメッセージ
+ 				$this->Flash->success(__('入札を送信しました。'));
+ 				// トップページにリダイレクト
+-				return $this->redirect(['action' => 'view', $biditem_id]);
++				return $this->redirect(['action'=>'view', $biditem_id]);
+ 			}
+ 			// 失敗時のメッセージ
+ 			$this->Flash->error(__('入札に失敗しました。もう一度入力下さい。'));
+@@ -163,7 +128,7 @@ class AuctionController extends AuctionBaseController
+ 		$biditem = $this->Biditems->get($biditem_id);
+ 		$this->set(compact('bidrequest', 'biditem'));
+ 	}
+-
++	
+ 	// 落札者とのメッセージ
+ 	public function msg($bidinfo_id = null)
+ 	{
+@@ -181,16 +146,15 @@ class AuctionController extends AuctionBaseController
+ 			}
+ 		}
+ 		try { // $bidinfo_idからBidinfoを取得する
+-			$bidinfo = $this->Bidinfo->get($bidinfo_id, ['contain' => ['Biditems']]);
+-		} catch (Exception $e) {
++			$bidinfo = $this->Bidinfo->get($bidinfo_id, ['contain'=>['Biditems']]);
++		} catch(Exception $e){
+ 			$bidinfo = null;
+ 		}
+ 		// Bidmessageをbidinfo_idとuser_idで検索
+-		$bidmsgs = $this->Bidmessages->find('all', [
+-			'conditions' => ['bidinfo_id' => $bidinfo_id],
++		$bidmsgs = $this->Bidmessages->find('all',[
++			'conditions'=>['bidinfo_id'=>$bidinfo_id],
+ 			'contain' => ['Users'],
+-			'order' => ['created' => 'desc']
+-		]);
++			'order'=>['created'=>'desc']]);
+ 		$this->set(compact('bidmsgs', 'bidinfo', 'bidmsg'));
+ 	}
+ 
+@@ -199,11 +163,10 @@ class AuctionController extends AuctionBaseController
+ 	{
+ 		// 自分が落札したBidinfoをページネーションで取得
+ 		$bidinfo = $this->paginate('Bidinfo', [
+-			'conditions' => ['Bidinfo.user_id' => $this->Auth->user('id')],
++			'conditions'=>['Bidinfo.user_id'=>$this->Auth->user('id')], 
+ 			'contain' => ['Users', 'Biditems'],
+-			'order' => ['created' => 'desc'],
+-			'limit' => 10
+-		])->toArray();
++			'order'=>['created'=>'desc'],
++			'limit' => 10])->toArray();
+ 		$this->set(compact('bidinfo'));
+ 	}
+ 
+@@ -212,11 +175,10 @@ class AuctionController extends AuctionBaseController
+ 	{
+ 		// 自分が出品したBiditemをページネーションで取得
+ 		$biditems = $this->paginate('Biditems', [
+-			'conditions' => ['Biditems.user_id' => $this->Auth->user('id')],
++			'conditions'=>['Biditems.user_id'=>$this->Auth->user('id')], 
+ 			'contain' => ['Users', 'Bidinfo'],
+-			'order' => ['created' => 'desc'],
+-			'limit' => 10
+-		])->toArray();
++			'order'=>['created'=>'desc'],
++			'limit' => 10])->toArray();
+ 		$this->set(compact('biditems'));
+ 	}
+ }
+diff --git a/html/mycakeapp/src/Model/Entity/Biditem.php b/html/mycakeapp/src/Model/Entity/Biditem.php
+index 7a9c2e1..f2070d0 100644
+--- a/html/mycakeapp/src/Model/Entity/Biditem.php
++++ b/html/mycakeapp/src/Model/Entity/Biditem.php
+@@ -31,8 +31,6 @@ class Biditem extends Entity
+     protected $_accessible = [
+         'user_id' => true,
+         'name' => true,
+-        'detail' => true,
+-        'image_path' => true,
+         'finished' => true,
+         'endtime' => true,
+         'created' => true,
+diff --git a/html/mycakeapp/src/Model/Table/BiditemsTable.php b/html/mycakeapp/src/Model/Table/BiditemsTable.php
+index 64b1295..1280a14 100644
+--- a/html/mycakeapp/src/Model/Table/BiditemsTable.php
++++ b/html/mycakeapp/src/Model/Table/BiditemsTable.php
+@@ -82,20 +82,6 @@ class BiditemsTable extends Table
+             ->dateTime('endtime')
+             ->requirePresence('endtime', 'create')
+             ->notEmptyDateTime('endtime');
+-        
+-        $validator
+-            ->scalar('detail')
+-            ->maxLength('detail', 400)
+-            ->requirePresence('detail', 'create')
+-            ->notEmptyString('detail');
+-
+-        $validator
+-            ->requirePresence('image_path', 'create')
+-            ->notEmptyFile('image_path')
+-            ->add('image_path','type', [
+-                'rule' => ['mimeType', ['image/jpeg', 'image/png', 'image/gif']],
+-                'message' => 'ファイル形式は「.jpeg」「.png」「.gif」のいずれかをお選びください。']
+-            );
+ 
+         return $validator;
+     }
+@@ -111,27 +97,6 @@ class BiditemsTable extends Table
+     {
+         $rules->add($rules->existsIn(['user_id'], 'Users'));
+ 
+-        // save()時のimage_pathについてルールチェック追加
+-        //文字列であるか、その文字列は400文字以内であるか
+-        $rules->addCreate(function($entity) {
+-            if (is_string($entity->image_path) && strlen($entity->image_path) <= 400) {
+-                return true;
+-            } else {
+-                return false;
+-            }
+-        }, ['message'=> '保存できませんでした。']);
+-
+         return $rules;
+     }
+-
+-
+-    /**
+-     * biditem_idの最新数字を取得する
+-    */
+-    public function findLastId(Query $query) {
+-        $lastId = $query->select('id')->order(['id' => 'desc'])->first();
+-        $lastId = json_decode($lastId, true);
+-        $biditem_id = $lastId['id'] + 1;
+-        return $biditem_id;
+-    }
+ }
+diff --git a/html/mycakeapp/src/Template/Auction/add.ctp b/html/mycakeapp/src/Template/Auction/add.ctp
+index 172a0b8..ac8a678 100644
+--- a/html/mycakeapp/src/Template/Auction/add.ctp
++++ b/html/mycakeapp/src/Template/Auction/add.ctp
+@@ -1,21 +1,15 @@
+ <h2>商品を出品する</h2>
+-<?= $this->Form->create($biditem, ['enctype' => 'multipart/form-data']) ?>
++<?= $this->Form->create($biditem) ?>
+ <fieldset>
+ 	<legend>※商品名と終了日時を入力：</legend>
+ 	<?php
+-	
+ 		echo $this->Form->hidden('user_id', ['value' => $authuser['id']]);
+ 		echo '<p><strong>USER: ' . $authuser['username'] . '</strong></p>';
+ 		echo $this->Form->control('name');
+-		echo $this->Form->control('detail', ['type' => 'textarea', 'label' => '詳細情報']);
+-		echo $this->Form->error('image_path');
+-		echo $this->Form->file('image_path', [
+-			'accept' => 'image/jpeg, image/png, image/gif',
+-			'label' => '商品画像 ※ 拡張子は「jpeg」「png」「gif」のみ。（大文字可）'
+-		]);
+ 		echo $this->Form->hidden('finished', ['value' => 0]);
+ 		echo $this->Form->control('endtime');
+ 	?>
+ </fieldset>
+ <?= $this->Form->button(__('Submit')) ?>
+ <?= $this->Form->end() ?>
++
+diff --git a/html/mycakeapp/src/Template/Auction/home2.ctp b/html/mycakeapp/src/Template/Auction/home2.ctp
+index 10c0744..0362a45 100644
+--- a/html/mycakeapp/src/Template/Auction/home2.ctp
++++ b/html/mycakeapp/src/Template/Auction/home2.ctp
+@@ -34,4 +34,4 @@
+ 		<?= $this->Paginator->last(__('last') . ' >>') ?>
+ 	</ul>
+ </div>
+-<h6><?= $this->Html->link(__('<< 落札情報に戻る'), ['action' => 'home']) ?></h6>
++<h6><?= $this->Html->link(__('<< 落札情報に戻る'), ['action' => 'home']) ?></h6>
+\ No newline at end of file
+diff --git a/html/mycakeapp/src/Template/Auction/view.ctp b/html/mycakeapp/src/Template/Auction/view.ctp
+index 6ccdb51..82bdd5a 100644
+--- a/html/mycakeapp/src/Template/Auction/view.ctp
++++ b/html/mycakeapp/src/Template/Auction/view.ctp
+@@ -1,97 +1,76 @@
+ <h2>「<?= $biditem->name ?>」の情報</h2>
+ <table class="vertical-table">
++<tr>
++	<th class="small" scope="row">出品者</th>
++	<td><?= $biditem->has('user') ? $biditem->user->username : '' ?></td>
++</tr>
++<tr>
++	<th scope="row">商品名</th>
++	<td><?= h($biditem->name) ?></td>
++</tr>
++<tr>
++	<th scope="row">商品ID</th>
++	<td><?= $this->Number->format($biditem->id) ?></td>
++</tr>
++<tr>
++	<th scope="row">終了時間</th>
++	<td><?= h($biditem->endtime) ?></td>
++</tr>
++<tr>
++	<th scope="row">投稿時間</th>
++	<td><?= h($biditem->created) ?></td>
++</tr>
++<tr>
++	<th scope="row"><?= __('終了した？') ?></th>
++	<td><?= $biditem->finished ? __('Yes') : __('No'); ?></td>
++</tr>
++</table>
++<div class="related">
++	<h4><?= __('落札情報') ?></h4>
++	<?php if (!empty($biditem->bidinfo)): ?>
++	<table cellpadding="0" cellspacing="0">
+ 	<tr>
+-		<th class="small" scope="row">出品者</th>
+-		<td><?= $biditem->has('user') ? $biditem->user->username : '' ?></td>
+-	</tr>
+-	<tr>
+-		<th scope="row">商品名</th>
+-		<td><?= h($biditem->name) ?></td>
+-	</tr>
+-	<tr>
+-		<th scope="row">詳細情報</th>
+-		<td><?= h($biditem->detail) ?></td>
+-	</tr>
+-	<tr>
+-		<th scope="row">商品画像</th>
+-		<td>
+-			<image src="<?= $this->Url->image('auction/' . $biditem->image_path); ?>" />
+-		</td>
+-	</tr>
+-	<tr>
+-		<th scope="row">商品ID</th>
+-		<td><?= $this->Number->format($biditem->id) ?></td>
++		<th scope="col">落札者</th>
++		<th scope="col">落札金額</th>
++		<th scope="col">落札日時</th>
+ 	</tr>
+ 	<tr>
+-		<th scope="row">終了時間</th>
++		<td><?= h($biditem->bidinfo->user->username) ?></td>
++		<td><?= h($biditem->bidinfo->price) ?>円</td>
+ 		<td><?= h($biditem->endtime) ?></td>
+ 	</tr>
++	</table>
++	<?php else: ?>
++	<p><?='※落札情報は、ありません。' ?></p>
++	<?php endif; ?>
++</div>
++<div class="related">
++	<h4><?= __('入札情報') ?></h4>
++	<?php if (!$biditem->finished): ?>
++	<h6><a href="<?=$this->Url->build(['action'=>'bid', $biditem->id]) ?>">《入札する！》</a></h6>
++	<?php if (!empty($bidrequests)): ?>
++	<table cellpadding="0" cellspacing="0">
++	<thead>
+ 	<tr>
+-		<th scope="row">カウントダウン</th>
+-		<td id="count">
+-			<?php
+-			echo $this->Html->scriptStart();
+-			echo 'var diff = ' . $timediff . ';';
+-			echo $this->Html->scriptEnd();
+-			echo $this->Html->script('countDown');
+-			?>
+-		</td>
+-	</tr>
+-	<tr>
+-		<th scope="row">投稿時間</th>
+-		<td><?= h($biditem->created) ?></td>
++		<th scope="col">入札者</th>
++		<th scope="col">金額</th>
++		<th scope="col">入札日時</th>
+ 	</tr>
++	</thead>
++	<tbody>
++	<?php foreach ($bidrequests as $bidrequest): ?>
+ 	<tr>
+-		<th scope="row"><?= __('終了した？') ?></th>
+-		<td><?= $biditem->finished ? __('Yes') : __('No'); ?></td>
++		<td><?= h($bidrequest->user->username) ?></td>
++		<td><?= h($bidrequest->price) ?>円</td>
++		<td><?=$bidrequest->created ?></td>
+ 	</tr>
+-</table>
+-<div class="related">
+-	<h4><?= __('落札情報') ?></h4>
+-	<?php if (!empty($biditem->bidinfo)) : ?>
+-		<table cellpadding="0" cellspacing="0">
+-			<tr>
+-				<th scope="col">落札者</th>
+-				<th scope="col">落札金額</th>
+-				<th scope="col">落札日時</th>
+-			</tr>
+-			<tr>
+-				<td><?= h($biditem->bidinfo->user->username) ?></td>
+-				<td><?= h($biditem->bidinfo->price) ?>円</td>
+-				<td><?= h($biditem->endtime) ?></td>
+-			</tr>
+-		</table>
+-	<?php else : ?>
+-		<p><?= '※落札情報は、ありません。' ?></p>
++	<?php endforeach; ?>
++	</tbody>
++	</table>
++	<?php else: ?>
++	<p><?='※入札は、まだありません。' ?></p>
+ 	<?php endif; ?>
+-</div>
+-<div class="related">
+-	<h4><?= __('入札情報') ?></h4>
+-	<?php if (!$biditem->finished) : ?>
+-		<h6><a href="<?= $this->Url->build(['action' => 'bid', $biditem->id]) ?>">《入札する！》</a></h6>
+-		<?php if (!empty($bidrequests)) : ?>
+-			<table cellpadding="0" cellspacing="0">
+-				<thead>
+-					<tr>
+-						<th scope="col">入札者</th>
+-						<th scope="col">金額</th>
+-						<th scope="col">入札日時</th>
+-					</tr>
+-				</thead>
+-				<tbody>
+-					<?php foreach ($bidrequests as $bidrequest) : ?>
+-						<tr>
+-							<td><?= h($bidrequest->user->username) ?></td>
+-							<td><?= h($bidrequest->price) ?>円</td>
+-							<td><?= $bidrequest->created ?></td>
+-						</tr>
+-					<?php endforeach; ?>
+-				</tbody>
+-			</table>
+-		<?php else : ?>
+-			<p><?= '※入札は、まだありません。' ?></p>
+-		<?php endif; ?>
+-	<?php else : ?>
+-		<p><?= '※入札は、終了しました。' ?></p>
++	<?php else: ?>
++	<p><?='※入札は、終了しました。' ?></p>
+ 	<?php endif; ?>
+ </div>
+diff --git a/html/mycakeapp/webroot/css/auction.css b/html/mycakeapp/webroot/css/auction.css
+index b251dab..cd7686c 100644
+--- a/html/mycakeapp/webroot/css/auction.css
++++ b/html/mycakeapp/webroot/css/auction.css
+@@ -25,7 +25,3 @@ table tr th.small {
+ nav.sidebar {
+ 	background:#f6f6ff;
+ }
+-.error-message {
+-	color: firebrick;
+-}
+-
+diff --git a/html/mycakeapp/webroot/img/auction/.gitkeep b/html/mycakeapp/webroot/img/auction/.gitkeep
+deleted file mode 100644
+index e69de29..0000000
+diff --git a/html/mycakeapp/webroot/js/countDown.js b/html/mycakeapp/webroot/js/countDown.js
+deleted file mode 100644
+index ac7e9b1..0000000
+--- a/html/mycakeapp/webroot/js/countDown.js
++++ /dev/null
+@@ -1,19 +0,0 @@
+-var d = 0; //日
+-var h = 0; //時
+-var m = 0; //分
+-var s = 0; //秒
+-
+-timerID = setInterval('countdown()',1000); //1秒毎にcountup()を呼び出し
+-
+-function countdown() {
+-    if (diff > 0) {
+-        diff--;
+-        d = Math.floor(diff / (60 * 60 * 24));
+-        h = Math.floor(diff / (60 * 60)) % 24;
+-        m = Math.floor(diff / 60) % 60;
+-        s = Math.floor(diff % 60);
+-        document.getElementById("count").innerHTML = 'あと' + d + '日' + h + '時' +  m + '分' + s + '秒';
+-    } else {
+-        document.getElementById("count").innerHTML = 'この商品のオークションは終了しました';
+-    }
+-}
+-- 
+2.20.1
+
