@@ -1,5 +1,4 @@
 <?php
-
 namespace App\Model\Table;
 
 use Cake\ORM\Query;
@@ -8,24 +7,23 @@ use Cake\ORM\Table;
 use Cake\Validation\Validator;
 
 /**
- * Biditems Model
+ * Sendinfo Model
  *
  * @property \App\Model\Table\UsersTable&\Cake\ORM\Association\BelongsTo $Users
- * @property \App\Model\Table\BidinfoTable&\Cake\ORM\Association\HasMany $Bidinfo
- * @property \App\Model\Table\BidrequestsTable&\Cake\ORM\Association\HasMany $Bidrequests
+ * @property \App\Model\Table\BidinfoTable&\Cake\ORM\Association\BelongsTo $Bidinfo
  *
- * @method \App\Model\Entity\Biditem get($primaryKey, $options = [])
- * @method \App\Model\Entity\Biditem newEntity($data = null, array $options = [])
- * @method \App\Model\Entity\Biditem[] newEntities(array $data, array $options = [])
- * @method \App\Model\Entity\Biditem|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Biditem saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
- * @method \App\Model\Entity\Biditem patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
- * @method \App\Model\Entity\Biditem[] patchEntities($entities, array $data, array $options = [])
- * @method \App\Model\Entity\Biditem findOrCreate($search, callable $callback = null, $options = [])
+ * @method \App\Model\Entity\Sendinfo get($primaryKey, $options = [])
+ * @method \App\Model\Entity\Sendinfo newEntity($data = null, array $options = [])
+ * @method \App\Model\Entity\Sendinfo[] newEntities(array $data, array $options = [])
+ * @method \App\Model\Entity\Sendinfo|false save(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Sendinfo saveOrFail(\Cake\Datasource\EntityInterface $entity, $options = [])
+ * @method \App\Model\Entity\Sendinfo patchEntity(\Cake\Datasource\EntityInterface $entity, array $data, array $options = [])
+ * @method \App\Model\Entity\Sendinfo[] patchEntities($entities, array $data, array $options = [])
+ * @method \App\Model\Entity\Sendinfo findOrCreate($search, callable $callback = null, $options = [])
  *
  * @mixin \Cake\ORM\Behavior\TimestampBehavior
  */
-class BiditemsTable extends Table
+class SendinfoTable extends Table
 {
     /**
      * Initialize method
@@ -37,7 +35,7 @@ class BiditemsTable extends Table
     {
         parent::initialize($config);
 
-        $this->setTable('biditems');
+        $this->setTable('sendinfo');
         $this->setDisplayField('name');
         $this->setPrimaryKey('id');
 
@@ -47,11 +45,9 @@ class BiditemsTable extends Table
             'foreignKey' => 'user_id',
             'joinType' => 'INNER',
         ]);
-        $this->hasOne('Bidinfo', [
-            'foreignKey' => 'biditem_id',
-        ]);
-        $this->hasMany('Bidrequests', [
-            'foreignKey' => 'biditem_id',
+        $this->belongsTo('Bidinfo', [
+            'foreignKey' => 'bidinfo_id',
+            'joinType' => 'INNER',
         ]);
     }
 
@@ -74,14 +70,16 @@ class BiditemsTable extends Table
             ->notEmptyString('name');
 
         $validator
-            ->boolean('finished')
-            ->requirePresence('finished', 'create')
-            ->notEmptyString('finished');
+            ->scalar('address')
+            ->maxLength('address', 400)
+            ->requirePresence('address', 'create')
+            ->notEmptyString('address');
 
         $validator
-            ->dateTime('endtime')
-            ->requirePresence('endtime', 'create')
-            ->notEmptyDateTime('endtime');
+            ->scalar('phone_number')
+            ->maxLength('phone_number', 20)
+            ->requirePresence('phone_number', 'create')
+            ->notEmptyString('phone_number');
 
         return $validator;
     }
@@ -96,6 +94,7 @@ class BiditemsTable extends Table
     public function buildRules(RulesChecker $rules)
     {
         $rules->add($rules->existsIn(['user_id'], 'Users'));
+        $rules->add($rules->existsIn(['bidinfo_id'], 'Bidinfo'));
 
         return $rules;
     }

@@ -53,6 +53,18 @@ class BidinfoTable extends Table
         $this->hasMany('Bidmessages', [
             'foreignKey' => 'bidinfo_id',
         ]);
+        $this->hasMany('Talks', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
+        $this->hasOne('ShippingNotices', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
+        $this->hasOne('ReceivingNotices', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
+        $this->hasMany('Sendinfo', [
+            'foreignKey' => 'bidinfo_id'
+        ]);
     }
 
     /**
@@ -88,5 +100,15 @@ class BidinfoTable extends Table
         $rules->add($rules->existsIn(['user_id'], 'Users'));
 
         return $rules;
+    }
+    /**
+     * パスで指定された$bidinfo_idのレコードがあるか判別する
+     */
+    public function isExists(string $id) {
+        if ($this->findById($id)->toList()) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

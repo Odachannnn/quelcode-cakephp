@@ -17,7 +17,7 @@
 				<td><?= h($biditem->created) ?></td>
 				<td class="actions">
 					<?php if (!empty($biditem->bidinfo)) : ?>
-						<?= $this->Html->link(__('View'), ['action' => 'msg', $biditem->bidinfo->id]) ?>
+						<?= $this->Html->link(__('取引画面'), ['action' => 'talkTerms', $biditem->bidinfo->id]) ?>
 					<?php endif; ?>
 				</td>
 			</tr>

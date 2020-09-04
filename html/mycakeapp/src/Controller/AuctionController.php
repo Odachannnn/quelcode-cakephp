@@ -6,6 +6,8 @@ use App\Controller\AppController;
 
 use Cake\Event\Event; // added.
 use Exception; // added.
+use Cake\Log\Log;
+
 
 class AuctionController extends AuctionBaseController
 {
@@ -23,11 +25,17 @@ class AuctionController extends AuctionBaseController
 		$this->loadModel('Bidrequests');
 		$this->loadModel('Bidinfo');
 		$this->loadModel('Bidmessages');
+		$this->loadModel('Talks');
+		$this->loadModel('Sendinfo');
+		$this->loadModel('ReceivingNotices');
+		$this->loadModel('ShippingNotices');
+		$this->loadModel('Ratinginfo');
 		// ログインしているユーザー情報をauthuserに設定
 		$this->set('authuser', $this->Auth->user());
 		// レイアウトをauctionに変更
 		$this->viewBuilder()->setLayout('auction');
 	}
+
 
 	// トップページ
 	public function index()
@@ -73,65 +81,36 @@ class AuctionController extends AuctionBaseController
 			// Biditemのbidinfoに$bidinfoを設定
 			$biditem->bidinfo = $bidinfo;
 		}
-		// 終了予定時刻=>$biditem['endtime'] と 現在時刻の差分をjsに渡す
-		// 終了予定時刻と現在時刻のタイムスタンプを取得する
-		$endtime = strtotime($biditem['endtime']);
-		$now = time();
-		$timediff = $endtime - $now;
-
 		// Bidrequestsからbiditem_idが$idのものを取得
 		$bidrequests = $this->Bidrequests->find('all', [
 			'conditions' => ['biditem_id' => $id],
 			'contain' => ['Users'],
 			'order' => ['price' => 'desc']
 		])->toArray();
+		// Ratinginfoから出品者の平均評価を取得
+		$ratingAvg = $this->Ratinginfo->getRatingAvg($biditem->user_id);
 		// オブジェクト類をテンプレート用に設定
-		$this->set(compact('biditem', 'bidrequests', 'timediff'));
+		$this->set(compact('biditem', 'bidrequests', 'ratingAvg'));
 	}
 
 	// 出品する処理
 	public function add()
 	{
+		// Biditemインスタンスを用意
+		$biditem = $this->Biditems->newEntity();
 		// POST送信時の処理
 		if ($this->request->is('post')) {
-			// postされたデータを取得する
-			$iteminfo = $this->request->getData();
-			// newEntityを作成する。ここで送信されてきたデータを検証
-			$biditem = $this->Biditems->newEntity($iteminfo);
-			// バリデーションエラーがあった場合
-			if (!empty($biditem->getErrors())) {
-				$this->Flash->error(__('保存に失敗しました。エラーを確認してください'));
+			// $biditemにフォームの送信内容を反映
+			$biditem = $this->Biditems->patchEntity($biditem, $this->request->getData());
+			// $biditemを保存する
+			if ($this->Biditems->save($biditem)) {
+				// 成功時のメッセージ
+				$this->Flash->success(__('保存しました。'));
+				// トップページ（index）に移動
+				return $this->redirect(['action' => 'index']);
 			}
-			// バリデーションエラーがなかった場合
-			if (empty($biditem->getErrors())) {
-				// 以下画像データのファイル名の変更、ファイルの移動について
-				// 元々のファイル名を取得する。
-				$image_path = $iteminfo['image_path']['name'];
-				// 一時保存されているフォルダでのファイル名を取得する。
-				$tmp_file = $iteminfo['image_path']['tmp_name'];
-				// ファイルの拡張子を取得する
-				$image_path = pathinfo($image_path, PATHINFO_EXTENSION);
-				// ファイル名につけるidを取得し、$iteminfo['image_path']に代入する
-				$biditem_id = $this->Biditems->find('lastId'); //findLastIdメソッド：BiditemsTable.phpに記載、最新のID取得
-				$iteminfo['image_path'] = $biditem_id . '.' . $image_path;
-				$biditem = $this->Biditems->patchEntity($biditem, $iteminfo, [
-					'validate' => false
-				]);
-				// $biditemを保存する
-				if ($this->Biditems->save($biditem)) {
-					// ファイルを移動させる
-					move_uploaded_file($tmp_file, '../webroot/img/auction/' . $iteminfo['image_path']);
-					// 成功時のメッセージ
-					$this->Flash->success(__('保存しました。'));
-					// トップページ（index）に移動
-					return $this->redirect(['action' => 'index']);
-				}
-				// 失敗時のメッセージ
-				$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
-			} 
-		} else {
-			// Biditemインスタンスを用意
-			$biditem = $this->Biditems->newEntity();
+			// 失敗時のメッセージ
+			$this->Flash->error(__('保存に失敗しました。もう一度入力下さい。'));
 		}
 		// 値を保管
 		$this->set(compact('biditem'));
@@ -218,5 +197,119 @@ class AuctionController extends AuctionBaseController
 			'limit' => 10
 		])->toArray();
 		$this->set(compact('biditems'));
+	}
+
+	// 取引画面の表示
+	public function talkTerms($bidinfo_id = null)
+	{
+		// 渡されたbidinfo_idの落札情報がなければリダイレクト（メソッドはテーブルクラスに記述）
+		if (!$this->Bidinfo->isExists($bidinfo_id)) {
+			return $this->redirect(['action' => 'index']);
+		}
+		$bidder = $this->Bidinfo->findById($bidinfo_id)->first();
+		$sellor = $this->Biditems->findById($bidder->biditem_id)->first();
+		$user = $this->Auth->user();
+		if ($user['id'] !== $bidder->user_id && $user['id'] !== $sellor->user_id) {
+			return $this->redirect(['action' => 'index']);
+		}
+
+		// 落札情報の取得
+		$bidData = $this->Bidinfo->get($bidinfo_id, ['contain' => ['Biditems']]);
+		// 新しい取引メッセージエンティティを作成
+		$talk = $this->Talks->newEntity();
+		// 取引メッセージ$talksを取得 カスタムファインダーはTalksTable.phpに記述
+		$talks = $this->Talks->find('Talks', ['bidinfo_id' => $bidinfo_id]);
+		// 商品送付先エンティティを作成
+		$sendinfo = $this->Sendinfo->newEntity();
+		// 発送連絡エンティティを作成
+		$shippingNotice = $this->ShippingNotices->newEntity();
+		// 受取連絡エンティティを作成
+		$receivingNotice = $this->ReceivingNotices->newEntity();
+		// ユーザー評価エンティティを作成
+		$ratinginfo = $this->Ratinginfo->newEntity();
+		/**
+		 * すでに送付先情報や発送連絡、受取連絡が送信されているかどうかを判断する変数
+		 */
+		// case 1 送付先情報
+		$is_sendinfo_sent = $this->Sendinfo->findByBidinfo_id($bidinfo_id)->first();
+		// case 2 発送連絡
+		$is_shipping_notice_sent = $this->ShippingNotices->findByBidinfo_id($bidinfo_id)->toArray();
+		// case 3 受取連絡
+		$is_receiving_notice_sent = $this->ReceivingNotices->findByBidinfo_id($bidinfo_id)->toArray();
+		// case 4 取引評価
+		$is_rating_sent = $this->Ratinginfo->findByBidinfo_id($bidinfo_id)->toArray();
+
+		$this->set(compact('bidder','bidData', 'talks', 'talk', 'bidinfo_id', 'sendinfo', 'is_sendinfo_sent', 'is_shipping_notice_sent', 'is_receiving_notice_sent', 'shippingNotice', 'receivingNotice', 'ratinginfo', 'is_rating_sent'));
+
+
+		//HTTP:POSTメソッドでアクセスされたとき
+		if ($this->request->is('post')) {
+
+			//case 1 メッセージの送信(talkエンティティ)
+			$talkData = $this->request->getData('Talks');
+			if (!empty($talkData)) {
+				$talk = $this->Talks->patchEntity($talk, $talkData);
+				// $talkをTalksテーブルに保存
+				if ($this->Talks->save($talk)) {
+					$this->Flash->success(__('送信しました'));
+				} else {
+					$this->Flash->error(__('送信に失敗しました。'));
+				}
+				$this->redirect(['action' => 'talkTerms', $bidinfo_id]);
+			}
+
+			//case 2 送信先情報の送信(sendinfoエンティティ) 落札者のみ
+			$sendinfoData = $this->request->getData('Sendinfo');
+			if (!empty($sendinfoData)) {
+				$sendinfo = $this->Sendinfo->patchEntity($sendinfo, $sendinfoData);
+				// $sendinfoをSendinfoテーブルに保存
+				if ($this->Sendinfo->save($sendinfo)) {
+					$this->Flash->success(__('送信しました。'));
+				} else {
+					$this->Flash->error(__('送信に失敗しました。'));
+				}
+				$this->redirect(['action' => 'talkTerms', $bidinfo_id]);
+			}
+
+			// case 3 発送連絡(shippingNoticeエンティティ)
+			$shippingNoticeData = $this->request->getData('ShippingNotices');
+			if (!empty($shippingNoticeData)) {
+				$shippingNotice = $this->ShippingNotices->patchEntity($shippingNotice, $shippingNoticeData);
+				// $shippingNoticeを shipping_noticesテーブルに保存
+				if ($this->ShippingNotices->save($shippingNotice)) {
+					$options = ['bidinfo_id' => $bidinfo_id, 'user_id' => $this->Auth->user('id')];
+					$this->Talks->saveSendMsg($options);
+				} else {
+					$this->Flash->error(__('送信に失敗しました。'));
+				}
+				$this->redirect(['action' => 'talkTerms', $bidinfo_id]);
+			}
+
+			// case 4 受取連絡(receivingNoticeエンティティ)
+			$receivingNoticeData = $this->request->getData('ReceivingNotices');
+			if (!empty($receivingNoticeData)) {
+				$receivingNotice = $this->ReceivingNotices->patchEntity($receivingNotice, $receivingNoticeData);
+				// $receivingNoticeを receiving_noticesテーブルに保存
+				if ($this->ReceivingNotices->save($receivingNotice)) {
+					$options = ['bidinfo_id' => $bidinfo_id, 'user_id' => $this->Auth->user('id')];
+					$this->Talks->saveReceiveMsg($options);
+				} else {
+					$this->Flash->error(__('送信に失敗しました。'));
+				}
+				$this->redirect(['action' => 'talkTerms', $bidinfo_id]);
+			}
+
+			// case 5 取引・ユーザー評価
+			$ratinginfoData = $this->request->getData('Ratinginfo');
+			if (!empty($ratinginfoData)) {
+				$ratinginfo = $this->Ratinginfo->patchEntity($ratinginfo, $ratinginfoData);
+				if ($this->Ratinginfo->save($ratinginfo)) {
+					$this->Flash->success(__('評価を送信しました'));
+				} else {
+					$this->Flash->error(__('送信に失敗しました'));
+				}
+				$this->redirect(['action' => 'talkTerms', $bidinfo_id]);
+			}
+		}
 	}
 }

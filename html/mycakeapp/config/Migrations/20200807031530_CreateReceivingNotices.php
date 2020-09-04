@@ -1,7 +1,7 @@
 <?php
 use Migrations\AbstractMigration;
 
-class AddColumnsToBiditems extends AbstractMigration
+class CreateReceivingNotices extends AbstractMigration
 {
     /**
      * Change Method.
@@ -12,17 +12,16 @@ class AddColumnsToBiditems extends AbstractMigration
      */
     public function change()
     {
-        $table = $this->table('biditems');
-        $table->addColumn('detail', 'string', [
+        $table = $this->table('receiving_notices');
+        $table->addColumn('bidinfo_id', 'integer', [
             'default' => null,
-            'limit' => 400,
+            'limit' => 11,
             'null' => false,
         ]);
-        $table->addColumn('image_path', 'string', [
+        $table->addColumn('created', 'datetime', [
             'default' => null,
-            'limit' => 100,
             'null' => false,
         ]);
-        $table->update();
+        $table->create();
     }
 }

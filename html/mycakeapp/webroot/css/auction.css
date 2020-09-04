@@ -25,7 +25,8 @@ table tr th.small {
 nav.sidebar {
 	background:#f6f6ff;
 }
-.error-message {
-	color: firebrick;
+.rating {
+	display: inline;
+	padding: 0 8px;
+	margin: 0 16px 0 0;
 }
-
