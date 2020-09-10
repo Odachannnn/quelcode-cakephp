@@ -100,7 +100,8 @@ return [
             'className' => FileEngine::class,
             'path' => CACHE,
             'url' => env('CACHE_DEFAULT_URL', null),
-        ],
+            'mask' => 0666,
+	],
 
         /**
          * Configure the cache used for general framework caching.
@@ -115,6 +116,7 @@ return [
             'serialize' => true,
             'duration' => '+1 years',
             'url' => env('CACHE_CAKECORE_URL', null),
+	    'mask' => 0666,
         ],
 
         /**
@@ -130,6 +132,7 @@ return [
             'serialize' => true,
             'duration' => '+1 years',
             'url' => env('CACHE_CAKEMODEL_URL', null),
+	    'mask' => 0666,
         ],
 
         /**
@@ -182,6 +185,7 @@ return [
         'skipLog' => [],
         'log' => true,
         'trace' => true,
+
     ],
 
     /**
@@ -256,15 +260,15 @@ return [
             'className' => Connection::class,
             'driver' => Mysql::class,
             'persistent' => false,
-            'host' => 'mysql',
+            'host' => 'localhost',
             /*
              * CakePHP will use the default DB port based on the driver selected
              * MySQL on MAMP uses port 8889, MAMP users will want to uncomment
              * the following line and set the port accordingly
              */
             //'port' => 'non_standard_port_number',
-            'username' => 'docker_db_user',
-            'password' => 'docker_db_user_pass',
+            'username' => 'vagrant',
+            'password' => 'Centos,7',
             'database' => 'docker_db',
             /*
              * You do not need to set this flag to use full utf-8 encoding (internal default since CakePHP 3.6).
@@ -330,6 +334,7 @@ return [
             'url' => env('LOG_DEBUG_URL', null),
             'scopes' => false,
             'levels' => ['notice', 'info', 'debug'],
+	    'mask' => 0666,
         ],
         'error' => [
             'className' => FileLog::class,
