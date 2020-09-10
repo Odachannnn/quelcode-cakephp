@@ -24,7 +24,10 @@
 		</ul>
 		<div class="top-bar-section">
 			<ul class="right">
-				<li><a target="_blank" href="https://plus.google.com/+TuyanoSYODA">about</a></li>
+				<li><?= $this->Html->link(
+					'Logout',
+					['controller' => 'Users', 'action' => 'logout']
+				) ?></li>
 			</ul>
 		</div>
 	</nav>
