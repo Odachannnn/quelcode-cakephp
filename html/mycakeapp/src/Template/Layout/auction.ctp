@@ -4,7 +4,7 @@
 	<?= $this->Html->charset() ?>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>
-		<?= $this->name . '/' . $this->request->action ?>
+		<?= $this->name . '/' . $this->request->getParam('action') ?>
 	</title>
 	<?= $this->Html->meta('icon') ?>
 
@@ -24,7 +24,10 @@
 		</ul>
 		<div class="top-bar-section">
 			<ul class="right">
-				<li><a target="_blank" href="https://plus.google.com/+TuyanoSYODA">about</a></li>
+				<li><?= $this->Html->link(
+					'Logout',
+					['controller' => 'Users', 'action' => 'logout']
+				) ?></li>
 			</ul>
 		</div>
 	</nav>
