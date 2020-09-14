@@ -6,11 +6,11 @@
 	</tr>
 	<tr>
 		<th class="small" scope="row">出品者評価</th>
-		<td><?php if(!empty($ratingAvg->avg)) {
-			echo round($ratingAvg->avg, 2); 
-		} else {
-			echo '';
-		} ?></td>
+		<td><?php if (!empty($ratingAvg->avg)) {
+				echo round($ratingAvg->avg, 2);
+			} else {
+				echo '';
+			} ?></td>
 	</tr>
 	<tr>
 		<th scope="row">商品名</th>
@@ -79,7 +79,9 @@
 <div class="related">
 	<h4><?= __('入札情報') ?></h4>
 	<?php if (!$biditem->finished) : ?>
-		<h6><a href="<?= $this->Url->build(['action' => 'bid', $biditem->id]) ?>">《入札する！》</a></h6>
+		<?php if ($biditem->user->id !== $authuser['id']) : ?>
+			<h6><a href="<?= $this->Url->build(['action' => 'bid', $biditem->id]) ?>">《入札する！》</a></h6>
+		<?php endif; ?>
 		<?php if (!empty($bidrequests)) : ?>
 			<table cellpadding="0" cellspacing="0">
 				<thead>
