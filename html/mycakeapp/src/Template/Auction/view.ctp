@@ -79,9 +79,7 @@
 <div class="related">
 	<h4><?= __('入札情報') ?></h4>
 	<?php if (!$biditem->finished) : ?>
-		<?php if ($biditem->user->id !== $authuser['id']) : ?>
-			<h6><a href="<?= $this->Url->build(['action' => 'bid', $biditem->id]) ?>">《入札する！》</a></h6>
-		<?php endif; ?>
+		<h6><a href="<?= $this->Url->build(['action' => 'bid', $biditem->id]) ?>">《入札する！》</a></h6>
 		<?php if (!empty($bidrequests)) : ?>
 			<table cellpadding="0" cellspacing="0">
 				<thead>

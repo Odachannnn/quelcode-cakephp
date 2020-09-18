@@ -160,10 +160,16 @@ class AuctionController extends AuctionBaseController
 		// $bidrequestにbiditem_idとuser_idを設定
 		$bidrequest->biditem_id = $biditem_id;
 		$bidrequest->user_id = $this->Auth->user('id');
+		// $biditem_idの$biditemを取得する
+		$biditem = $this->Biditems->get($biditem_id);
 		// POST送信時の処理
 		if ($this->request->is('post')) {
 			// $bidrequestに送信フォームの内容を反映する
 			$bidrequest = $this->Bidrequests->patchEntity($bidrequest, $this->request->getData());
+			if ($biditem->user_id === $this->Auth->user('id')) {
+				$this->Flash->error(__('出品者は入札できません'));
+				return $this->redirect(['action' => 'view', $biditem_id]);
+			}
 			// Bidrequestを保存
 			if ($this->Bidrequests->save($bidrequest)) {
 				// 成功時のメッセージ
@@ -174,8 +180,6 @@ class AuctionController extends AuctionBaseController
 			// 失敗時のメッセージ
 			$this->Flash->error(__('入札に失敗しました。もう一度入力下さい。'));
 		}
-		// $biditem_idの$biditemを取得する
-		$biditem = $this->Biditems->get($biditem_id);
 		$this->set(compact('bidrequest', 'biditem'));
 	}
 
