@@ -166,21 +166,19 @@ class AuctionController extends AuctionBaseController
 		if ($this->request->is('post')) {
 			// 送信フォームの内容をチェックする
 			$getData = $this->request->getData();
-			if ((int)$getData['user_id'] === $this->Auth->user('id')) {
-				$this->Flash->error(__('出品者は入札できません'));
-				return $this->redirect(['action' => 'view', $biditem_id]);
-			}
-			// $bidrequestに送信フォームの内容を反映する
-			$bidrequest = $this->Bidrequests->patchEntity($bidrequest, $getData);
-			// Bidrequestを保存
-			if ($this->Bidrequests->save($bidrequest)) {
-				// 成功時のメッセージ
-				$this->Flash->success(__('入札を送信しました。'));
-				// トップページにリダイレクト
-				return $this->redirect(['action' => 'view', $biditem_id]);
+			if ($this->Auth->user('id') !== $biditem->user_id) {
+				// $bidrequestに送信フォームの内容を反映する
+				$bidrequest = $this->Bidrequests->patchEntity($bidrequest, $getData);
+				// Bidrequestを保存
+				if ($this->Bidrequests->save($bidrequest)) {
+					// 成功時のメッセージ
+					$this->Flash->success(__('入札を送信しました。'));
+					// トップページにリダイレクト
+					return $this->redirect(['action' => 'view', $biditem_id]);
+				}
 			}
 			// 失敗時のメッセージ
-			$this->Flash->error(__('入札に失敗しました。もう一度入力下さい。'));
+			$this->Flash->error(__('入札に失敗しました。もう一度入力下さい。※ 出品者は入札できません。'));
 		}
 		$this->set(compact('bidrequest', 'biditem'));
 	}
