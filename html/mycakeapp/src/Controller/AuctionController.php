@@ -166,7 +166,7 @@ class AuctionController extends AuctionBaseController
 		if ($this->request->is('post')) {
 			// 送信フォームの内容をチェックする
 			$getData = $this->request->getData();
-			if ($this->Auth->user('id') !== $biditem->user_id) {
+			if ((int)$getData['user_id'] !== $biditem->user_id) {
 				// $bidrequestに送信フォームの内容を反映する
 				$bidrequest = $this->Bidrequests->patchEntity($bidrequest, $getData);
 				// Bidrequestを保存
